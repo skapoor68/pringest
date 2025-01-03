@@ -1,3 +1,4 @@
 digest.txt
 .env
 *env
+.ds_store

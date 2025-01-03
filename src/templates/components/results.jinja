@@ -1,0 +1,79 @@
+{% if result %}
+<div class="mt-10 -mx-6 sm:-mx-11 md:-mx-19 lg:-mx-27" data-result>
+    <div class="relative">
+        <div class="w-full h-full absolute inset-0 bg-gray-900 rounded-xl translate-y-2 translate-x-2"></div>
+        <div class="bg-[#fafafa] rounded-xl border-[3px] border-gray-900 p-6 relative z-20 space-y-6">
+            <!-- PR Info and Stats -->
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+                <!-- PR Summary -->
+                <div class="md:col-span-6">
+                    <div class="flex gap-5 items-center mb-4">
+                        <h3 class="text-xl font-bold text-gray-900">PR Summary</h3>
+                        <div class="relative group">
+                            <div class="w-full h-full rounded bg-gray-900 translate-y-1 translate-x-1 absolute inset-0"></div>
+                            <button onclick="copyText('pr-summary')"
+                                    class="px-4 py-2 bg-[#ffc480] border-[3px] border-gray-900 text-gray-900 rounded group-hover:-translate-y-px group-hover:-translate-x-px transition-transform relative z-10 flex items-center gap-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                                </svg>
+                                Copy
+                            </button>
+                        </div>
+                    </div>
+                    <div class="relative">
+                        <div class="w-full h-full rounded bg-gray-900 translate-y-1 translate-x-1 absolute inset-0"></div>
+                        <textarea class="pr-summary w-full p-4 bg-[#fff4da] border-[3px] border-gray-900 rounded font-mono text-sm resize-none focus:outline-none relative z-10 h-[215px]"
+                                  readonly>{{ pr_summary }}</textarea>
+                    </div>
+                </div>
+
+                <!-- Files Changed -->
+                <div class="md:col-span-6">
+                    <div class="flex gap-5 items-center mb-4">
+                        <h3 class="text-xl font-bold text-gray-900">Files Changed</h3>
+                        <div class="relative group">
+                            <div class="w-full h-full rounded bg-gray-900 translate-y-1 translate-x-1 absolute inset-0"></div>
+                            <button onclick="copyText('files-changed')"
+                                    class="px-4 py-2 bg-[#ffc480] border-[3px] border-gray-900 text-gray-900 rounded group-hover:-translate-y-px group-hover:-translate-x-px transition-transform relative z-10 flex items-center gap-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                                </svg>
+                                Copy
+                            </button>
+                        </div>
+                    </div>
+                    <div class="relative">
+                        <div class="w-full h-full rounded bg-gray-900 translate-y-1 translate-x-1 absolute inset-0"></div>
+                        <textarea class="files-changed w-full p-4 bg-[#fff4da] border-[3px] border-gray-900 rounded font-mono text-sm resize-none focus:outline-none relative z-10 h-[215px]"
+                                  readonly>{{ files_changed }}
+                        </textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Diff Content -->
+            <div>
+                <div class="flex gap-5 items-center mb-4">
+                    <h3 class="text-xl font-bold text-gray-900">PR Diff</h3>
+                    <div class="relative group">
+                        <div class="w-full h-full rounded bg-gray-900 translate-y-1 translate-x-1 absolute inset-0"></div>
+                        <button onclick="copyText('pr-diff')"
+                                class="px-4 py-2 bg-[#ffc480] border-[3px] border-gray-900 text-gray-900 rounded group-hover:-translate-y-px group-hover:-translate-x-px transition-transform relative z-10 flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                            </svg>
+                            Copy
+                        </button>
+                    </div>
+                </div>
+                <div class="relative">
+                    <div class="w-full h-full rounded bg-gray-900 translate-y-1 translate-x-1 absolute inset-0"></div>
+                    <textarea class="pr-diff w-full p-4 bg-[#fff4da] border-[3px] border-gray-900 rounded font-mono text-sm resize-y focus:outline-none relative z-10"
+                              style="min-height: {{ '600px' if pr_diff else 'calc(100vh-800px)' }}"
+                              readonly>{{ pr_diff }}</textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}

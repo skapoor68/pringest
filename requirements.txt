@@ -1,0 +1,7 @@
+fastapi[standard]
+jinja2
+python-dotenv
+aiohttp
+uvicorn
+python-multipart
+itsdangerous

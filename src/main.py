@@ -3,6 +3,8 @@ from fastapi import FastAPI, Request, Form, HTTPException
 from fastapi.responses import RedirectResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from slowapi.errors import RateLimitExceeded
+from slowapi import _rate_limit_exceeded_handler
 from starlette.middleware.sessions import SessionMiddleware
 from datetime import datetime
 import secrets
@@ -10,10 +12,13 @@ from dotenv import load_dotenv
 
 from pringest import GitHubAPI
 from auth import GITHUB_CLIENT_ID, exchange_code_for_token, get_github_user
+from server_utils import limiter, EXAMPLE_PRS
 
 load_dotenv()
 
 app = FastAPI()
+app.state.limiter = limiter
+
 app.add_middleware(
     SessionMiddleware,
     secret_key=secrets.token_urlsafe(32)
@@ -23,11 +28,9 @@ app.add_middleware(
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
-EXAMPLE_PRS = [
-    {"name": "Implement PDF Support", "url": "https://github.com/cyclotruc/gitingest/pull/80"},
-    {"name": "Add swap count", "url": "https://github.com/RodrigoDLPontes/visualization-tool/pull/245"},
-    {"name": "Refactor exclusion checks", "url": "https://github.com/apple/foundationdb/pull/11835"}
-]
+@app.exception_handler(RateLimitExceeded)
+async def rate_limit_handler(request: Request, exc: RateLimitExceeded):
+    return _rate_limit_exceeded_handler(request, exc)
 
 @app.get("/")
 async def home(request: Request):
@@ -70,6 +73,7 @@ async def logout(request: Request):
 
 
 @app.post("/", response_class=HTMLResponse)
+@limiter.limit("10/minute")
 async def process_pr(
     request: Request,
     pr_url: str = Form(...),

@@ -1,20 +1,46 @@
+FROM python:3.12-slim AS builder
+
+WORKDIR /build
+
+# Copy requirements first to leverage Docker cache
+COPY requirements.txt .
+
+# Install build dependencies and Python packages
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends gcc python3-dev \
+    && pip install --no-cache-dir --upgrade pip \
+    && pip install --no-cache-dir --timeout 1000 -r requirements.txt \
+    && rm -rf /var/lib/apt/lists/*
+
+# Runtime stage
 FROM python:3.12-slim
 
+# Set Python environment variables
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
 
 WORKDIR /app
 
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
-COPY .env .
-COPY src/ .
-
+# Create a non-root user
 RUN useradd -m -u 1000 appuser
+
+# Install runtime dependencies
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy Python packages from builder
+COPY --from=builder /usr/local/lib/python3.12/site-packages/ /usr/local/lib/python3.12/site-packages/
+
+# Copy source code
+COPY src/ ./
+
+# Change ownership of the application files
 RUN chown -R appuser:appuser /app
+
+# Switch to non-root user
 USER appuser
 
 EXPOSE 8000
 
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+CMD ["python", "-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]

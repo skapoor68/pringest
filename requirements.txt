@@ -5,3 +5,4 @@ aiohttp
 uvicorn
 python-multipart
 itsdangerous
+slowapi

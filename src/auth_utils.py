@@ -2,7 +2,7 @@ from fastapi import HTTPException
 from fastapi.security import OAuth2AuthorizationCodeBearer
 import aiohttp
 import os
-from typing import Optional, Dict
+from typing import Dict
 
 # OAuth2 config
 GITHUB_CLIENT_ID = os.getenv("GITHUB_CLIENT_ID")

@@ -49,6 +49,7 @@ async def process_pr(
         github_api = GitHubAPI(token=user["access_token"])
         pr_info = await github_api.get_pr_info(pr_url)
         diff_text = await github_api.get_pr_diff(pr_info['diff_url'])
+        patch_text = await github_api.get_pr_patch(pr_info['patch_url'])
         
         created_at = datetime.fromisoformat(pr_info['created_at'].replace('Z', '+00:00'))
         updated_at = datetime.fromisoformat(pr_info['updated_at'].replace('Z', '+00:00'))
@@ -75,6 +76,7 @@ async def process_pr(
                 "pr_summary": pr_summary,
                 "files_changed": pr_info['files_summary'],
                 "pr_diff": diff_text,
+                "pr_patch": patch_text,
                 "examples": EXAMPLE_PRS
             }
         )

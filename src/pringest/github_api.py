@@ -45,6 +45,14 @@ class GitHubAPI:
                 if resp.status != 200:
                     raise HTTPException(status_code=resp.status, detail="Failed to fetch PR diff")
                 return await resp.text()
+            
+    async def get_pr_patch(self, patch_url: str) -> str:
+        """Fetch the PR patch text from the patch URL."""
+        async with aiohttp.ClientSession() as session:
+            async with session.get(patch_url) as resp:
+                if resp.status != 200:
+                    raise HTTPException(status_code=resp.status, detail="Failed to fetch PR patch")
+                return await resp.text()
         
     async def get_pr_info(self, pr_url: str) -> dict:
         """Fetch PR information including title, description, and file changes."""
@@ -61,6 +69,7 @@ class GitHubAPI:
 
             # Get PR diff if available
             diff = pr_data.get("diff_url", "Diff not available")
+            patch = pr_data.get("patch_url", "Patch not available")
 
             # Generate files summary with additions/deletions
             files_summary = "\n".join(
@@ -77,6 +86,7 @@ class GitHubAPI:
                 "deletions": sum(f["deletions"] for f in files_data),
                 "files_summary": files_summary,
                 "diff_url": diff,
+                "patch_url": patch,
                 "author": pr_data["user"]["login"],
                 "created_at": pr_data["created_at"],
                 "updated_at": pr_data["updated_at"]

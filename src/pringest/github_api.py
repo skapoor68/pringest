@@ -16,7 +16,7 @@ class GitHubAPI:
         }
         if self.token:
             self.headers["Authorization"] = f"Bearer {self.token}"
-        
+    
     @staticmethod
     def parse_pr_url(url: str) -> Tuple[str, str, int]:
         """Extract owner, repo, and PR number from GitHub PR URL."""
@@ -26,9 +26,13 @@ class GitHubAPI:
             raise ValueError("Invalid GitHub PR URL. Expected format: https://github.com/owner/repo/pull/number")
         return match.group(1), match.group(2), int(match.group(3))
 
-    async def _make_request(self, endpoint: str) -> dict:
+    async def _make_request(self, endpoint: str, accept_header: Optional[str] = None) -> dict | str:
         """Make an authenticated request to the GitHub API."""
-        async with aiohttp.ClientSession(headers=self.headers) as session:
+        headers = self.headers.copy()
+        if accept_header:
+            headers["Accept"] = accept_header
+            
+        async with aiohttp.ClientSession(headers=headers) as session:
             async with session.get(f"{self.base_url}{endpoint}") as resp:
                 if resp.status == 404:
                     raise HTTPException(status_code=404, detail="PR not found or repository is private")
@@ -36,42 +40,31 @@ class GitHubAPI:
                     raise HTTPException(status_code=403, detail="API rate limit exceeded")
                 elif resp.status != 200:
                     raise HTTPException(status_code=resp.status, detail="GitHub API request failed")
-                return await resp.json()
-            
+                
+                return await resp.text() if accept_header else await resp.json()
+
     async def get_pr_diff(self, diff_url: str) -> str:
-        """Fetch the PR diff text from the diff URL."""
-        async with aiohttp.ClientSession() as session:
-            async with session.get(diff_url) as resp:
-                if resp.status != 200:
-                    raise HTTPException(status_code=resp.status, detail="Failed to fetch PR diff")
-                return await resp.text()
-            
+        """Fetch the PR diff text using the GitHub API."""
+        owner, repo, pr_number = self.parse_pr_url(diff_url)
+        endpoint = f"/repos/{owner}/{repo}/pulls/{pr_number}"
+        return await self._make_request(endpoint, accept_header="application/vnd.github.v3.diff")
+
     async def get_pr_patch(self, patch_url: str) -> str:
-        """Fetch the PR patch text from the patch URL."""
-        async with aiohttp.ClientSession() as session:
-            async with session.get(patch_url) as resp:
-                if resp.status != 200:
-                    raise HTTPException(status_code=resp.status, detail="Failed to fetch PR patch")
-                return await resp.text()
-        
+        """Fetch the PR patch text using the GitHub API."""
+        owner, repo, pr_number = self.parse_pr_url(patch_url)
+        endpoint = f"/repos/{owner}/{repo}/pulls/{pr_number}"
+        return await self._make_request(endpoint, accept_header="application/vnd.github.v3.patch")
+
     async def get_pr_info(self, pr_url: str) -> dict:
         """Fetch PR information including title, description, and file changes."""
         try:
             owner, repo, pr_number = self.parse_pr_url(pr_url)
             
-            # Fetch PR details
+            # Fetch PR details and files
             pr_endpoint = f"/repos/{owner}/{repo}/pulls/{pr_number}"
             pr_data = await self._make_request(pr_endpoint)
-            
-            # Fetch PR files
-            files_endpoint = f"{pr_endpoint}/files"
-            files_data = await self._make_request(files_endpoint)
+            files_data = await self._make_request(f"{pr_endpoint}/files")
 
-            # Get PR diff if available
-            diff = pr_data.get("diff_url", "Diff not available")
-            patch = pr_data.get("patch_url", "Patch not available")
-
-            # Generate files summary with additions/deletions
             files_summary = "\n".join(
                 f"{f['filename']} ({f['status']}, +{f['additions']}/-{f['deletions']})" 
                 for f in files_data
@@ -85,8 +78,8 @@ class GitHubAPI:
                 "additions": sum(f["additions"] for f in files_data),
                 "deletions": sum(f["deletions"] for f in files_data),
                 "files_summary": files_summary,
-                "diff_url": diff,
-                "patch_url": patch,
+                "diff_url": pr_data.get("diff_url", "Diff not available"),
+                "patch_url": pr_data.get("patch_url", "Patch not available"),
                 "author": pr_data["user"]["login"],
                 "created_at": pr_data["created_at"],
                 "updated_at": pr_data["updated_at"]

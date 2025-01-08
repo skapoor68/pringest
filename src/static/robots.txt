@@ -1,0 +1,14 @@
+User-agent: *
+Allow: /$
+Allow: /static/img/
+Allow: /static/js/
+Disallow: /login
+Disallow: /callback
+Disallow: /logout
+Disallow: /wp-admin/
+Disallow: /wp-login/
+Disallow: /wp-content/
+Disallow: /admin/
+Disallow: /*.php$
+
+Crawl-delay: 10
